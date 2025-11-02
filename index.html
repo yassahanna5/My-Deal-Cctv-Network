@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mydeal - نظام تجارة الورقع </title>
+    <title>Mydeal - نظام تجارة الورق المتكامل</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- إضافة Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-        /* نفس الأنماط السابقة */
+        /* الأنماط تبقى كما هي */
         :root {
             --primary: #2c3e50;
             --secondary: #3498db;
@@ -261,9 +261,14 @@
             padding: 15px;
             margin: 10px 0;
             background: white;
+            transition: var(--transition);
         }
 
-        .login-modal {
+        .product-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .login-modal, .edit-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -276,12 +281,14 @@
             justify-content: center;
         }
 
-        .login-content {
+        .login-content, .edit-content {
             background-color: white;
             padding: 30px;
             border-radius: 10px;
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .stats-grid {
@@ -374,6 +381,112 @@
             margin: 10px 0;
         }
 
+        .dimensions-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .dimensions-input input {
+            flex: 1;
+        }
+
+        .dimensions-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .dimension-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dimension-item:last-child {
+            border-bottom: none;
+        }
+
+        /* أنماط جديدة للمنتجات المتعددة */
+        .cart-items {
+            margin-top: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-value {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .cart-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--secondary);
+            text-align: center;
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+
+        .orders-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -382,6 +495,21 @@
             
             nav ul {
                 gap: 15px;
+            }
+            
+            .dimensions-input {
+                flex-direction: column;
+            }
+            
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .cart-item-actions {
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
@@ -408,10 +536,65 @@
             </div>
             <div class="form-group">
                 <label for="adminPassword">كلمة المرور</label>
-                <input type="password" id="adminPassword" class="form-control" placeholder="كلمة المرور">
+                <input type="password" id="adminPassword" class="form-control" placeholder="admin123">
             </div>
             <button class="btn" onclick="adminLogin()">تسجيل الدخول</button>
-            <button class="btn btn-danger" onclick="closeLogin()" style="margin-top: 10px;">إلغاء</button>
+            <button class="btn btn-danger" onclick="closeModal('loginModal')" style="margin-top: 10px;">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div class="edit-modal" id="editModal">
+        <div class="edit-content">
+            <h2>تعديل المنتج</h2>
+            <div class="form-group">
+                <label for="editProductName">اسم المنتج</label>
+                <input type="text" id="editProductName" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="editProductType">نوع المنتج</label>
+                <select id="editProductType" class="form-control">
+                    <option value="thermal">ورق حراري</option>
+                    <option value="wax">ريبون شمعي</option>
+                    <option value="resin">ريبون ريزين</option>
+                    <option value="wax-resin">ريبون شمعي ريزين</option>
+                    <option value="white">ورق أبيض نصف لامع</option>
+                    <option value="plastic">بلاستيك</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editProductPrice">سعر المتر (جنيه)</label>
+                <input type="number" id="editProductPrice" class="form-control" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label>الأطوال المتاحة (سم)</label>
+                <div class="dimensions-input">
+                    <input type="number" id="newLength" class="form-control" placeholder="أدخل طول جديد">
+                    <button class="btn btn-success" onclick="addLength()">إضافة</button>
+                </div>
+                <div class="dimensions-list" id="lengthsList"></div>
+            </div>
+
+            <div class="form-group">
+                <label>العروض المتاحة (سم)</label>
+                <div class="dimensions-input">
+                    <input type="number" id="newWidth" class="form-control" placeholder="أدخل عرض جديد">
+                    <button class="btn btn-success" onclick="addWidth()">إضافة</button>
+                </div>
+                <div class="dimensions-list" id="widthsList"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="editProductActive">حالة المنتج</label>
+                <select id="editProductActive" class="form-control">
+                    <option value="true">نشط</option>
+                    <option value="false">غير نشط</option>
+                </select>
+            </div>
+
+            <button class="btn btn-success" onclick="updateProduct()">حفظ التعديلات</button>
+            <button class="btn btn-danger" onclick="closeModal('editModal')" style="margin-top: 10px;">إلغاء</button>
         </div>
     </div>
 
@@ -454,12 +637,16 @@
 
                 <div class="form-group">
                     <label for="length">الطول (سم)</label>
-                    <input type="number" id="length" class="form-control" placeholder="أدخل الطول بالسنتيمتر">
+                    <select id="length" class="form-control" disabled>
+                        <option value="">اختر المنتج أولاً</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
                     <label for="width">العرض (سم)</label>
-                    <input type="number" id="width" class="form-control" placeholder="أدخل العرض بالسنتيمتر">
+                    <select id="width" class="form-control" disabled>
+                        <option value="">اختر المنتج أولاً</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -471,7 +658,18 @@
                     </select>
                 </div>
 
-                <button class="btn" onclick="calculatePrice()">احسب السعر</button>
+                <button class="btn" onclick="addToCart()">إضافة إلى السلة</button>
+
+                <!-- سلة التسوق -->
+                <div class="cart-items" id="cartItems" style="display: none;">
+                    <h3>سلة التسوق</h3>
+                    <div id="cartItemsList"></div>
+                    <div class="cart-total">
+                        <h4>المجموع الكلي: <span id="cartTotalPrice">0</span> جنيه</h4>
+                        <button class="btn btn-success" onclick="calculateTotalPrice()">احسب السعر النهائي</button>
+                        <button class="btn btn-danger" onclick="clearCart()" style="margin-top: 10px;">تفريغ السلة</button>
+                    </div>
+                </div>
 
                 <div class="price-display">
                     <h3>السعر الإجمالي</h3>
@@ -575,6 +773,25 @@
                         <option value="plastic">بلاستيك</option>
                     </select>
                     <input type="number" id="newProductPrice" class="form-control" placeholder="سعر المتر" step="0.01" style="margin-bottom: 10px;">
+                    
+                    <div class="form-group">
+                        <label>الأطوال المتاحة (سم)</label>
+                        <div class="dimensions-input">
+                            <input type="number" id="newProductLength" class="form-control" placeholder="أدخل طول جديد">
+                            <button class="btn btn-success" onclick="addNewProductLength()">إضافة</button>
+                        </div>
+                        <div class="dimensions-list" id="newProductLengthsList"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>العروض المتاحة (سم)</label>
+                        <div class="dimensions-input">
+                            <input type="number" id="newProductWidth" class="form-control" placeholder="أدخل عرض جديد">
+                            <button class="btn btn-success" onclick="addNewProductWidth()">إضافة</button>
+                        </div>
+                        <div class="dimensions-list" id="newProductWidthsList"></div>
+                    </div>
+
                     <button class="btn btn-success" onclick="addProduct()">إضافة منتج</button>
                 </div>
 
@@ -584,15 +801,15 @@
                 </div>
 
                 <div id="ordersList" style="margin-top: 30px;">
-                    <h3>الطلبات الحديثة</h3>
-                    <div id="ordersContainer"></div>
+                    <h3>جميع الطلبات</h3>
+                    <div class="orders-list" id="ordersContainer"></div>
                 </div>
             </div>
         </div>
     </section>
 
     <script>
-        // 🔥 Firebase Configuration - باستخدام إعداداتك
+        // 🔥 Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBznBqyjqA87Jp7hQakRgg4okOk6eXxw1E",
             authDomain: "mydeal-6b90d.firebaseapp.com",
@@ -621,6 +838,16 @@
         let currentUser = null;
         let currentOrder = null;
         let isFirebaseConnected = false;
+        let currentEditingProduct = null;
+        let newProductLengths = [];
+        let newProductWidths = [];
+        let editingProductLengths = [];
+        let editingProductWidths = [];
+        
+        // متغيرات جديدة للسلة
+        let cart = [];
+        let totalPrice = 0;
+        let currentOrderItems = []; // لتخزين جميع المنتجات في الطلب الحالي
 
         // DOM Elements
         const notification = document.getElementById('notification');
@@ -636,14 +863,43 @@
         const STORAGE_KEYS = {
             PRODUCTS: 'mydeal_products',
             ORDERS: 'mydeal_orders',
-            ADMIN_LOGGED_IN: 'mydeal_admin_logged_in'
+            ADMIN_LOGGED_IN: 'mydeal_admin_logged_in',
+            CART: 'mydeal_cart',
+            CURRENT_ORDER: 'mydeal_current_order'
         };
+
+        // 🔥 تحديث البيانات في الوقت الفعلي
+        function setupRealtimeUpdates() {
+            // تحديث المنتجات في الوقت الفعلي
+            db.collection('products').onSnapshot((snapshot) => {
+                products = snapshot.docs.map(doc => ({
+                    _id: doc.id,
+                    ...doc.data()
+                }));
+                populateProductSelect();
+                if (isAdminLoggedIn) {
+                    loadAdminProducts();
+                }
+                showNotification('🔄 تم تحديث قائمة المنتجات', false);
+            });
+
+            // تحديث الطلبات في الوقت الفعلي
+            db.collection('orders').onSnapshot((snapshot) => {
+                orders = snapshot.docs.map(doc => ({
+                    _id: doc.id,
+                    ...doc.data()
+                }));
+                if (isAdminLoggedIn) {
+                    loadAdminOrders();
+                    updateStats();
+                }
+            });
+        }
 
         // 🔥 تحقق من اتصال Firebase
         function checkFirebaseConnection() {
             return new Promise((resolve) => {
-                const testDoc = db.collection('test').doc('connection');
-                testDoc.set({ test: true }, { merge: true })
+                db.collection('test').limit(1).get()
                     .then(() => {
                         console.log('✅ Firebase connection successful');
                         isFirebaseConnected = true;
@@ -657,12 +913,116 @@
             });
         }
 
+        // 🔥 إدارة الأبعاد للمنتجات الجديدة
+        function addNewProductLength() {
+            const lengthInput = document.getElementById('newProductLength');
+            const length = parseFloat(lengthInput.value);
+            
+            if (length && !newProductLengths.includes(length)) {
+                newProductLengths.push(length);
+                updateNewProductLengthsList();
+                lengthInput.value = '';
+            }
+        }
+
+        function addNewProductWidth() {
+            const widthInput = document.getElementById('newProductWidth');
+            const width = parseFloat(widthInput.value);
+            
+            if (width && !newProductWidths.includes(width)) {
+                newProductWidths.push(width);
+                updateNewProductWidthsList();
+                widthInput.value = '';
+            }
+        }
+
+        function updateNewProductLengthsList() {
+            const list = document.getElementById('newProductLengthsList');
+            list.innerHTML = newProductLengths.map(length => `
+                <div class="dimension-item">
+                    <span>${length} سم</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeNewProductLength(${length})">حذف</button>
+                </div>
+            `).join('');
+        }
+
+        function updateNewProductWidthsList() {
+            const list = document.getElementById('newProductWidthsList');
+            list.innerHTML = newProductWidths.map(width => `
+                <div class="dimension-item">
+                    <span>${width} سم</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeNewProductWidth(${width})">حذف</button>
+                </div>
+            `).join('');
+        }
+
+        function removeNewProductLength(length) {
+            newProductLengths = newProductLengths.filter(l => l !== length);
+            updateNewProductLengthsList();
+        }
+
+        function removeNewProductWidth(width) {
+            newProductWidths = newProductWidths.filter(w => w !== width);
+            updateNewProductWidthsList();
+        }
+
+        // 🔥 إدارة الأبعاد للمنتج أثناء التعديل
+        function addLength() {
+            const lengthInput = document.getElementById('newLength');
+            const length = parseFloat(lengthInput.value);
+            
+            if (length && !editingProductLengths.includes(length)) {
+                editingProductLengths.push(length);
+                updateEditingLengthsList();
+                lengthInput.value = '';
+            }
+        }
+
+        function addWidth() {
+            const widthInput = document.getElementById('newWidth');
+            const width = parseFloat(widthInput.value);
+            
+            if (width && !editingProductWidths.includes(width)) {
+                editingProductWidths.push(width);
+                updateEditingWidthsList();
+                widthInput.value = '';
+            }
+        }
+
+        function updateEditingLengthsList() {
+            const list = document.getElementById('lengthsList');
+            list.innerHTML = editingProductLengths.map(length => `
+                <div class="dimension-item">
+                    <span>${length} سم</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeEditingLength(${length})">حذف</button>
+                </div>
+            `).join('');
+        }
+
+        function updateEditingWidthsList() {
+            const list = document.getElementById('widthsList');
+            list.innerHTML = editingProductWidths.map(width => `
+                <div class="dimension-item">
+                    <span>${width} سم</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeEditingWidth(${width})">حذف</button>
+                </div>
+            `).join('');
+        }
+
+        function removeEditingLength(length) {
+            editingProductLengths = editingProductLengths.filter(l => l !== length);
+            updateEditingLengthsList();
+        }
+
+        function removeEditingWidth(width) {
+            editingProductWidths = editingProductWidths.filter(w => w !== width);
+            updateEditingWidthsList();
+        }
+
         // 🔥 Firebase Functions
         async function loadProducts() {
             try {
                 showLoading();
-                
-                // تحقق من الاتصال أولاً
                 const connected = await checkFirebaseConnection();
                 
                 if (connected) {
@@ -674,21 +1034,22 @@
                     
                     if (products.length === 0) {
                         await addDefaultProducts();
-                        await loadProducts();
-                    } else {
-                        populateProductSelect();
-                        if (isAdminLoggedIn) {
-                            loadAdminProducts();
-                        }
                     }
-                    showNotification('✅ تم تحميل المنتجات من Firebase');
+                    
+                    populateProductSelect();
+                    if (isAdminLoggedIn) {
+                        loadAdminProducts();
+                    }
+                    
+                    // إعداد التحديثات الفورية
+                    setupRealtimeUpdates();
                 } else {
                     throw new Error('No Firebase connection');
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
-                showNotification('⚠️ استخدام البيانات المحلية - تحقق من قواعد Firebase', true);
-                products = getDefaultProducts();
+                // إزالة المنتج الافتراضي الذي يسبب NaN
+                products = [];
                 populateProductSelect();
             } finally {
                 hideLoading();
@@ -697,12 +1058,24 @@
 
         async function addDefaultProducts() {
             const defaultProducts = [
-                { name: 'ورق حراري عادي', type: 'thermal', price: 32, active: true, createdAt: new Date().toISOString() },
-                { name: 'ريبون شمعي', type: 'wax', price: 11, active: true, createdAt: new Date().toISOString() },
-                { name: 'ريبون ريزين', type: 'resin', price: 15, active: true, createdAt: new Date().toISOString() },
-                { name: 'ريبون شمعي ريزين', type: 'wax-resin', price: 18, active: true, createdAt: new Date().toISOString() },
-                { name: 'ورق أبيض نصف لامع', type: 'white', price: 28, active: true, createdAt: new Date().toISOString() },
-                { name: 'بلاستيك لامع', type: 'plastic', price: 35, active: true, createdAt: new Date().toISOString() }
+                { 
+                    name: 'ورق حراري عادي', 
+                    type: 'thermal', 
+                    price: 32, 
+                    active: true, 
+                    lengths: [50, 100, 150, 200],
+                    widths: [50, 100, 150],
+                    createdAt: new Date().toISOString() 
+                },
+                { 
+                    name: 'ريبون شمعي', 
+                    type: 'wax', 
+                    price: 11, 
+                    active: true, 
+                    lengths: [100, 200, 300],
+                    widths: [50, 75, 100],
+                    createdAt: new Date().toISOString() 
+                }
             ];
 
             try {
@@ -712,7 +1085,6 @@
                 console.log('✅ Default products added successfully');
             } catch (error) {
                 console.error('Error adding default products:', error);
-                throw error;
             }
         }
 
@@ -721,8 +1093,8 @@
             const type = document.getElementById('newProductType').value;
             const price = parseFloat(document.getElementById('newProductPrice').value);
 
-            if (!name || !price) {
-                showNotification('يرجى ملء جميع الحقول', true);
+            if (!name || !price || newProductLengths.length === 0 || newProductWidths.length === 0) {
+                showNotification('يرجى ملء جميع الحقول وإضافة الأبعاد', true);
                 return;
             }
 
@@ -730,28 +1102,25 @@
                 name: name,
                 type: type,
                 price: price,
+                lengths: newProductLengths,
+                widths: newProductWidths,
                 active: true,
                 createdAt: new Date().toISOString()
             };
 
             try {
                 showLoading();
+                await db.collection('products').add(productData);
+                showNotification('✅ تم إضافة المنتج بنجاح');
                 
-                if (isFirebaseConnected) {
-                    await db.collection('products').add(productData);
-                    showNotification('✅ تم إضافة المنتج إلى Firebase بنجاح');
-                } else {
-                    // حفظ محلي
-                    const localProducts = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]');
-                    productData._id = Date.now().toString();
-                    localProducts.push(productData);
-                    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(localProducts));
-                    showNotification('⚠️ تم إضافة المنتج محلياً', true);
-                }
-                
+                // تنظيف الحقول
                 document.getElementById('newProductName').value = '';
                 document.getElementById('newProductPrice').value = '';
-                await loadProducts();
+                newProductLengths = [];
+                newProductWidths = [];
+                updateNewProductLengthsList();
+                updateNewProductWidthsList();
+                
             } catch (error) {
                 console.error('Error adding product:', error);
                 showNotification('❌ خطأ في إضافة المنتج', true);
@@ -760,22 +1129,68 @@
             }
         }
 
-        async function deleteProduct(productId) {
+        function editProduct(productId) {
+            const product = products.find(p => p._id === productId);
+            if (!product) return;
+
+            currentEditingProduct = product;
+            editingProductLengths = [...(product.lengths || [])];
+            editingProductWidths = [...(product.widths || [])];
+
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductType').value = product.type;
+            document.getElementById('editProductPrice').value = product.price;
+            document.getElementById('editProductActive').value = product.active.toString();
+
+            updateEditingLengthsList();
+            updateEditingWidthsList();
+
+            openModal('editModal');
+        }
+
+        async function updateProduct() {
+            if (!currentEditingProduct) return;
+
+            const name = document.getElementById('editProductName').value;
+            const type = document.getElementById('editProductType').value;
+            const price = parseFloat(document.getElementById('editProductPrice').value);
+            const active = document.getElementById('editProductActive').value === 'true';
+
+            if (!name || !price || editingProductLengths.length === 0 || editingProductWidths.length === 0) {
+                showNotification('يرجى ملء جميع الحقول', true);
+                return;
+            }
+
+            const updates = {
+                name: name,
+                type: type,
+                price: price,
+                lengths: editingProductLengths,
+                widths: editingProductWidths,
+                active: active,
+                updatedAt: new Date().toISOString()
+            };
+
             try {
                 showLoading();
-                
-                if (isFirebaseConnected) {
-                    await db.collection('products').doc(productId).delete();
-                    showNotification('✅ تم حذف المنتج من Firebase');
-                } else {
-                    // حذف محلي
-                    const localProducts = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]');
-                    const updatedProducts = localProducts.filter(p => p._id !== productId);
-                    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(updatedProducts));
-                    showNotification('⚠️ تم حذف المنتج محلياً', true);
-                }
-                
-                await loadProducts();
+                await db.collection('products').doc(currentEditingProduct._id).update(updates);
+                showNotification('✅ تم تحديث المنتج بنجاح');
+                closeModal('editModal');
+            } catch (error) {
+                console.error('Error updating product:', error);
+                showNotification('❌ خطأ في تحديث المنتج', true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteProduct(productId) {
+            if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+
+            try {
+                showLoading();
+                await db.collection('products').doc(productId).delete();
+                showNotification('✅ تم حذف المنتج بنجاح');
             } catch (error) {
                 console.error('Error deleting product:', error);
                 showNotification('❌ خطأ في حذف المنتج', true);
@@ -786,15 +1201,11 @@
 
         async function loadOrders() {
             try {
-                if (isFirebaseConnected) {
-                    const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').limit(10).get();
-                    orders = snapshot.docs.map(doc => ({
-                        _id: doc.id,
-                        ...doc.data()
-                    }));
-                } else {
-                    orders = getLocalOrders();
-                }
+                const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
+                orders = snapshot.docs.map(doc => ({
+                    _id: doc.id,
+                    ...doc.data()
+                }));
                 
                 if (isAdminLoggedIn) {
                     loadAdminOrders();
@@ -808,54 +1219,88 @@
 
         async function createOrder(orderData) {
             try {
-                if (isFirebaseConnected) {
-                    await db.collection('orders').add(orderData);
-                    showNotification('✅ تم حفظ الطلب في Firebase بنجاح');
-                } else {
-                    saveOrderLocally(orderData);
-                    showNotification('⚠️ تم حفظ الطلب محلياً - تحقق من اتصال الإنترنت', true);
-                }
-                
+                await db.collection('orders').add(orderData);
+                showNotification('✅ تم حفظ الطلب بنجاح');
                 currentOrder = orderData;
                 whatsappBtn.disabled = false;
-                await loadOrders();
+                
+                // حفظ الطلب الحالي في التخزين المحلي
+                localStorage.setItem(STORAGE_KEYS.CURRENT_ORDER, JSON.stringify(orderData));
             } catch (error) {
                 console.error('Error creating order:', error);
-                saveOrderLocally(orderData);
-                currentOrder = orderData;
-                whatsappBtn.disabled = false;
-                showNotification('❌ خطأ في حفظ الطلب - تم الحفظ محلياً', true);
+                showNotification('❌ خطأ في حفظ الطلب', true);
             }
         }
 
-        function getDefaultProducts() {
-            return [
-                { _id: '1', name: 'ورق حراري عادي', type: 'thermal', price: 32, active: true },
-                { _id: '2', name: 'ريبون شمعي', type: 'wax', price: 11, active: true },
-                { _id: '3', name: 'ريبون ريزين', type: 'resin', price: 15, active: true },
-                { _id: '4', name: 'ريبون شمعي ريزين', type: 'wax-resin', price: 18, active: true },
-                { _id: '5', name: 'ورق أبيض نصف لامع', type: 'white', price: 28, active: true },
-                { _id: '6', name: 'بلاستيك لامع', type: 'plastic', price: 35, active: true }
-            ];
-        }
-
+        // إزالة الدالة getDefaultProducts() التي تسبب المشكلة
         function getLocalOrders() {
             return JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
         }
 
-        function saveOrderLocally(orderData) {
-            const orders = getLocalOrders();
-            orders.push(orderData);
-            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+        // 🔥 تحديث واجهة المستخدم
+        function populateProductSelect() {
+            const select = document.getElementById('productType');
+            select.innerHTML = '<option value="">اختر نوع المنتج</option>';
+            
+            if (products.length === 0) {
+                select.innerHTML = '<option value="">لا توجد منتجات متاحة</option>';
+                return;
+            }
+            
+            products.filter(p => p.active).forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.type;
+                option.textContent = `${product.name} - ${product.price} جنيه/متر`;
+                select.appendChild(option);
+            });
         }
 
-        // باقي الدوال تبقى كما هي...
-        // [Admin Functions, Authentication, Price Calculation, etc.]
+        function updateDimensionsSelects() {
+            const productType = document.getElementById('productType').value;
+            const lengthSelect = document.getElementById('length');
+            const widthSelect = document.getElementById('width');
+            
+            lengthSelect.innerHTML = '<option value="">اختر الطول</option>';
+            widthSelect.innerHTML = '<option value="">اختر العرض</option>';
+            
+            if (!productType) {
+                lengthSelect.disabled = true;
+                widthSelect.disabled = true;
+                return;
+            }
+
+            const product = products.find(p => p.type === productType);
+            if (!product) return;
+
+            lengthSelect.disabled = false;
+            widthSelect.disabled = false;
+
+            // تعبئة الأطوال
+            (product.lengths || []).forEach(length => {
+                const option = document.createElement('option');
+                option.value = length;
+                option.textContent = `${length} سم`;
+                lengthSelect.appendChild(option);
+            });
+
+            // تعبئة العروض
+            (product.widths || []).forEach(width => {
+                const option = document.createElement('option');
+                option.value = width;
+                option.textContent = `${width} سم`;
+                widthSelect.appendChild(option);
+            });
+        }
 
         // 🔥 Admin Functions
         function loadAdminProducts() {
             const container = document.getElementById('productsContainer');
             container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<div class="cart-empty">لا توجد منتجات حالياً</div>';
+                return;
+            }
 
             products.forEach(product => {
                 const productCard = document.createElement('div');
@@ -864,8 +1309,9 @@
                     <h4>${product.name}</h4>
                     <p>النوع: ${getProductTypeName(product.type)}</p>
                     <p>السعر: ${product.price} جنيه للمتر</p>
+                    <p>الأطوال: ${(product.lengths || []).join('، ')} سم</p>
+                    <p>العروض: ${(product.widths || []).join('، ')} سم</p>
                     <p>الحالة: ${product.active ? 'نشط' : 'غير نشط'}</p>
-                    <p>المصدر: ${product._id && product._id.length > 10 ? 'Firebase' : 'محلي'}</p>
                     <div style="margin-top: 10px;">
                         <button class="btn btn-warning" onclick="editProduct('${product._id}')">تعديل</button>
                         <button class="btn btn-danger" onclick="deleteProductConfirm('${product._id}')">حذف</button>
@@ -879,19 +1325,46 @@
             const container = document.getElementById('ordersContainer');
             container.innerHTML = '';
 
-            const recentOrders = orders.slice(0, 5);
-            recentOrders.forEach(order => {
+            // عرض جميع الطلبات
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="cart-empty">لا توجد طلبات حالياً</div>';
+                return;
+            }
+
+            orders.forEach(order => {
                 const orderCard = document.createElement('div');
                 orderCard.className = 'product-card';
-                orderCard.innerHTML = `
-                    <h4>طلب #${order.orderNumber}</h4>
-                    <p>المنتج: ${order.productName}</p>
-                    <p>المقاس: ${order.length} × ${order.width} سم</p>
-                    <p>الكمية: ${order.quantity} استيكر</p>
-                    <p>السعر: ${order.totalPrice} جنيه</p>
-                    <p>المصدر: ${order._id && order._id.length > 10 ? 'Firebase' : 'محلي'}</p>
-                    <p>التاريخ: ${new Date(order.createdAt).toLocaleDateString('ar-EG')}</p>
-                `;
+                
+                // التحقق من نوع الطلب (منتج واحد أو متعدد)
+                if (order.items) {
+                    // طلب متعدد المنتجات
+                    orderCard.innerHTML = `
+                        <h4>طلب #${order.orderNumber}</h4>
+                        <p>عدد المنتجات: ${order.items.length}</p>
+                        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                            ${order.items.map(item => `
+                                <div style="margin-bottom: 5px;">
+                                    ${item.productName} - ${item.length}×${item.width} سم - ${item.quantity} استيكر - ${item.itemPrice} جنيه
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p><strong>المجموع الكلي: ${order.totalPrice} جنيه</strong></p>
+                        <p>التاريخ: ${new Date(order.createdAt).toLocaleDateString('ar-EG')}</p>
+                        <p>الوقت: ${new Date(order.createdAt).toLocaleTimeString('ar-EG')}</p>
+                    `;
+                } else {
+                    // طلب منتج واحد
+                    orderCard.innerHTML = `
+                        <h4>طلب #${order.orderNumber}</h4>
+                        <p>المنتج: ${order.productName}</p>
+                        <p>المقاس: ${order.length} × ${order.width} سم</p>
+                        <p>الكمية: ${order.quantity} استيكر</p>
+                        <p>السعر: ${order.totalPrice} جنيه</p>
+                        <p>التاريخ: ${new Date(order.createdAt).toLocaleDateString('ar-EG')}</p>
+                        <p>الوقت: ${new Date(order.createdAt).toLocaleTimeString('ar-EG')}</p>
+                    `;
+                }
+                
                 container.appendChild(orderCard);
             });
         }
@@ -912,7 +1385,7 @@
                 isAdminLoggedIn = true;
                 currentUser = { email: email, role: 'admin' };
                 localStorage.setItem(STORAGE_KEYS.ADMIN_LOGGED_IN, 'true');
-                loginModal.style.display = 'none';
+                closeModal('loginModal');
                 adminSection.style.display = 'block';
                 adminLink.style.display = 'none';
                 logoutLink.style.display = 'block';
@@ -935,15 +1408,15 @@
             showNotification('تم تسجيل الخروج');
         }
 
-        // 🔥 Price Calculation
-        function calculatePrice() {
+        // 🔥 وظائف السلة الجديدة - تم إصلاحها
+        function addToCart() {
             const productType = document.getElementById('productType').value;
-            const length = parseFloat(document.getElementById('length').value);
-            const width = parseFloat(document.getElementById('width').value);
+            const length = document.getElementById('length').value;
+            const width = document.getElementById('width').value;
             const quantity = document.getElementById('quantity').value;
 
             if (!productType || !length || !width) {
-                showNotification('يرجى ملء جميع الحقول', true);
+                showNotification('يرجى اختيار المنتج والأبعاد', true);
                 return;
             }
 
@@ -953,52 +1426,130 @@
                 return;
             }
 
+            // حساب السعر
+            let price = calculateItemPrice(product, length, width, quantity);
+            
+            // إضافة المنتج إلى السلة
+            const cartItem = {
+                id: Date.now().toString(),
+                productName: product.name,
+                productType: productType,
+                length: parseFloat(length),
+                width: parseFloat(width),
+                quantity: quantity,
+                unitPrice: product.price,
+                itemPrice: price,
+                createdAt: new Date().toISOString()
+            };
+
+            cart.push(cartItem);
+            updateCartDisplay();
+            showNotification(`تم إضافة ${product.name} إلى السلة`);
+        }
+
+        function calculateItemPrice(product, length, width, quantity) {
             let price = 0;
-            let steps = [];
+            const numLength = parseFloat(length);
+            const numWidth = parseFloat(width);
             const pricePerMeter = product.price;
 
-            if (['thermal', 'white', 'plastic'].includes(productType)) {
-                price = (length * width * pricePerMeter) / 1000;
-                steps.push(`الطول (${length} سم) × العرض (${width} سم) × سعر المتر (${pricePerMeter} جنيه) = ${(length * width * pricePerMeter).toLocaleString()} جنيه`);
-                steps.push(`نقسم على 1000 = ${price.toLocaleString()} جنيه`);
-            } else if (['wax', 'resin', 'wax-resin'].includes(productType)) {
-                price = (width * length * pricePerMeter);
-                steps.push(`العرض (${width} سم) × الطول (${length} سم) × سعر المتر (${pricePerMeter} جنيه) = ${price.toLocaleString()} جنيه`);
+            if (['thermal', 'white', 'plastic'].includes(product.type)) {
+                price = (numLength * numWidth * pricePerMeter) / 1000;
+            } else if (['wax', 'resin', 'wax-resin'].includes(product.type)) {
+                price = (numWidth * numLength * pricePerMeter);
             }
 
             if (quantity === "500") {
                 price = price / 2;
-                steps.push(`نقسم على 2 = ${price.toLocaleString()} جنيه`);
             } else if (quantity === "2000") {
                 price = price * 2;
-                steps.push(`نضرب في 2 = ${price.toLocaleString()} جنيه`);
             }
 
-            const finalPrice = Math.round(price);
-            document.getElementById('priceValue').textContent = finalPrice.toLocaleString() + ' جنيه';
-            document.getElementById('selectedLength').textContent = length + ' سم';
-            document.getElementById('selectedWidth').textContent = width + ' سم';
-            document.getElementById('selectedQuantity').textContent = quantity + ' استيكر';
-            document.getElementById('pricePerMeter').textContent = pricePerMeter + ' جنيه';
+            return Math.round(price);
+        }
 
-            const stepsContent = document.getElementById('stepsContent');
-            stepsContent.innerHTML = steps.map(step => `<div class="step">${step}</div>`).join('');
-            document.getElementById('calculationSteps').style.display = 'block';
+        function updateCartDisplay() {
+            const cartItemsList = document.getElementById('cartItemsList');
+            const cartItemsContainer = document.getElementById('cartItems');
+            
+            if (cart.length === 0) {
+                cartItemsList.innerHTML = '<div class="cart-empty">السلة فارغة</div>';
+                cartItemsContainer.style.display = 'none';
+                return;
+            }
 
+            cartItemsContainer.style.display = 'block';
+            
+            cartItemsList.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h4>${item.productName}</h4>
+                        <p>المقاس: ${item.length} × ${item.width} سم</p>
+                        <p>الكمية: ${item.quantity} استيكر</p>
+                        <p>السعر: ${item.itemPrice} جنيه</p>
+                    </div>
+                    <div class="cart-item-actions">
+                        <button class="btn btn-danger" onclick="removeFromCart('${item.id}')">حذف</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateCartTotal();
+        }
+
+        function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            updateCartDisplay();
+            showNotification('تم حذف المنتج من السلة');
+        }
+
+        function updateCartTotal() {
+            totalPrice = cart.reduce((sum, item) => sum + item.itemPrice, 0);
+            document.getElementById('cartTotalPrice').textContent = totalPrice.toLocaleString();
+        }
+
+        // 🔥 دالة جديدة: تفريغ السلة
+        function clearCart() {
+            cart = [];
+            updateCartDisplay();
+            showNotification('تم تفريغ السلة');
+        }
+
+        function calculateTotalPrice() {
+            if (cart.length === 0) {
+                showNotification('السلة فارغة', true);
+                return;
+            }
+
+            // حساب السعر الكلي بشكل صحيح
+            totalPrice = cart.reduce((sum, item) => sum + item.itemPrice, 0);
+            
+            // حفظ الطلب الكلي - السلة تفضل كما هي
             const orderData = {
-                productName: product.name,
-                productType: productType,
-                length: length,
-                width: width,
-                quantity: quantity,
-                unitPrice: pricePerMeter,
-                totalPrice: finalPrice,
+                items: [...cart], // نسخة من السلة الحالية
+                totalPrice: totalPrice,
                 createdAt: new Date().toISOString(),
                 orderNumber: 'ORD-' + Date.now()
             };
             
             createOrder(orderData);
-            showNotification(`تم حساب السعر: ${finalPrice.toLocaleString()} جنيه`);
+            showNotification(`تم حساب السعر النهائي: ${totalPrice.toLocaleString()} جنيه وتم حفظ الطلب`);
+            
+            // إظهار تفاصيل الحساب
+            document.getElementById('priceValue').textContent = totalPrice.toLocaleString() + ' جنيه';
+            document.getElementById('calculationSteps').style.display = 'block';
+            
+            const stepsContent = document.getElementById('stepsContent');
+            stepsContent.innerHTML = `
+                <div class="step">عدد المنتجات: ${cart.length}</div>
+                ${cart.map(item => `
+                    <div class="step">${item.productName}: ${item.itemPrice} جنيه</div>
+                `).join('')}
+                <div class="step">المجموع الكلي: ${totalPrice} جنيه</div>
+            `;
+            
+            // ⚠️ مهم: لا يتم تفريغ السلة بعد الحفظ
+            // يمكن للمستخدم إضافة منتجات أخرى لنفس الطلب
         }
 
         // 🔥 WhatsApp Integration
@@ -1009,15 +1560,25 @@
             }
 
             const phoneNumber = "201008559292";
-            const message = `مرحباً، لقد قمت بعملية شراء من Mydeal:
+            let message = `مرحباً، لقد قمت بعملية شراء من Mydeal:\n\n`;
 
-المنتج: ${currentOrder.productName}
-المقاس: ${currentOrder.length} × ${currentOrder.width} سم
-الكمية: ${currentOrder.quantity} استيكر
-المبلغ: ${currentOrder.totalPrice} جنيه
-رقم الطلب: ${currentOrder.orderNumber}
+            if (currentOrder.items) {
+                // طلب متعدد المنتجات
+                message += `عدد المنتجات: ${currentOrder.items.length}\n`;
+                currentOrder.items.forEach(item => {
+                    message += `- ${item.productName}: ${item.length}×${item.width} سم، ${item.quantity} استيكر، ${item.itemPrice} جنيه\n`;
+                });
+                message += `\nالمجموع الكلي: ${currentOrder.totalPrice} جنيه\n`;
+            } else {
+                // طلب منتج واحد
+                message += `المنتج: ${currentOrder.productName}\n`;
+                message += `المقاس: ${currentOrder.length} × ${currentOrder.width} سم\n`;
+                message += `الكمية: ${currentOrder.quantity} استيكر\n`;
+                message += `المبلغ: ${currentOrder.totalPrice} جنيه\n`;
+            }
 
-يرجى تأكيد استلام الدفع وتنفيذ الطلب. شكراً!`;
+            message += `رقم الطلب: ${currentOrder.orderNumber}\n\n`;
+            message += `يرجى تأكيد استلام الدفع وتنفيذ الطلب. شكراً!`;
 
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -1045,18 +1606,6 @@
             }, 4000);
         }
 
-        function populateProductSelect() {
-            const select = document.getElementById('productType');
-            select.innerHTML = '<option value="">اختر نوع المنتج</option>';
-            
-            products.filter(p => p.active).forEach(product => {
-                const option = document.createElement('option');
-                option.value = product.type;
-                option.textContent = `${product.name} - ${product.price} جنيه/متر`;
-                select.appendChild(option);
-            });
-        }
-
         function getProductTypeName(type) {
             const types = {
                 'thermal': 'ورق حراري',
@@ -1075,14 +1624,18 @@
             }
         }
 
-        function closeLogin() {
-            loginModal.style.display = 'none';
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         // Event Listeners
         adminLink.addEventListener('click', (e) => {
             e.preventDefault();
-            loginModal.style.display = 'flex';
+            openModal('loginModal');
         });
 
         logoutLink.addEventListener('click', (e) => {
@@ -1090,25 +1643,18 @@
             adminLogout();
         });
 
-        ['length', 'width', 'quantity'].forEach(id => {
-            document.getElementById(id).addEventListener('input', calculatePrice);
-        });
-
-        document.getElementById('productType').addEventListener('change', calculatePrice);
+        document.getElementById('productType').addEventListener('change', updateDimensionsSelects);
 
         // التحميل الأولي
         document.addEventListener('DOMContentLoaded', function() {
             loadProducts();
             loadOrders();
             
-            document.getElementById('length').value = '103';
-            document.getElementById('width').value = '153';
+            // تنظيف السلة من أي بيانات قديمة
+            cart = [];
+            localStorage.removeItem(STORAGE_KEYS.CART);
+            updateCartDisplay();
         });
-
-        setInterval(() => {
-            loadProducts();
-            loadOrders();
-        }, 30000);
     </script>
 </body>
-</html>
+</html> 
