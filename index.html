@@ -896,13 +896,257 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container text-center">
-            <h4 class="mb-3">للمتابعة مع الشركة 01008559292 علي الواتس</h4>
-            <h5 class="mb-3" style="color: #ffcc00;">powerd by Eng.yassa hanna واتس 01016447253</h5>
-            <h5>All rights resaved for My Deal Cctv & Network © 2025</h5>
+<footer class="footer">
+    <div class="container text-center">
+        <!-- أزرار الواتساب -->
+        <div class="whatsapp-buttons mb-4">
+            <h4 class="mb-3">للتواصل معنا عبر الواتساب:</h4>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="https://wa.me/201008559292" class="btn btn-whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp me-2"></i> 01008559292 - الشركة
+                </a>
+                <a href="https://wa.me/201016447253" class="btn btn-whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp me-2"></i> 01016447253 -   الدعم الفني من مطور الموقع 
+                </a>
+            </div>
         </div>
-    </footer>
+
+        <!-- زر Portfolio -->
+        <div class="portfolio-section mb-4">
+            <a href="https://mostaql.com/u/yassahanna5/portfolio" class="btn btn-portfolio" target="_blank">
+                <i class="fas fa-briefcase me-2"></i> Developed by Eng. Yassa Hanna -   صانع الموقع عرض أعمالي وحجز خدمة
+            </a>
+        </div>
+
+        <!-- حقوق النشر -->
+        <div class="copyright-section">
+            <h5>All rights reserved for My Deal CCTV & Network © 2025</h5>
+        </div>
+    </div>
+
+    <style>
+        /* تحسينات الفوتر */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
+            color: white;
+            padding: 3rem 0 1.5rem;
+            margin-top: 4rem;
+            position: relative;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #e74c3c);
+        }
+
+        /* أزرار الواتساب */
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white !important;
+            border: none;
+            border-radius: 25px;
+            padding: 0.8rem 1.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+            position: relative;
+            overflow: hidden;
+            min-width: 220px;
+            justify-content: center;
+        }
+
+        .btn-whatsapp::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #128C7E, #25D366);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 25px;
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5);
+            color: white !important;
+        }
+
+        .btn-whatsapp:hover::before {
+            opacity: 1;
+        }
+
+        .btn-whatsapp i {
+            position: relative;
+            z-index: 2;
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-whatsapp:hover i {
+            transform: scale(1.2);
+        }
+
+        /* زر Portfolio */
+        .btn-portfolio {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white !important;
+            border: none;
+            border-radius: 25px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-portfolio::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 25px;
+        }
+
+        .btn-portfolio:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white !important;
+        }
+
+        .btn-portfolio:hover::before {
+            opacity: 1;
+        }
+
+        .btn-portfolio i {
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-portfolio:hover i {
+            transform: translateX(5px);
+        }
+
+        /* تأثير النبض لأزرار الواتساب */
+        @keyframes whatsapp-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+            }
+        }
+
+        .btn-whatsapp {
+            animation: whatsapp-pulse 2s infinite;
+        }
+
+        /* تأثير النبض لزر Portfolio */
+        @keyframes portfolio-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+            }
+        }
+
+        .btn-portfolio {
+            animation: portfolio-pulse 3s infinite;
+        }
+
+        /* تحسينات النص */
+        .footer h4 {
+            color: #ffcc00;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer h5 {
+            color: #ecf0f1;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .whatsapp-buttons h4 {
+            color: #25D366;
+            font-size: 1.4rem;
+        }
+
+        /* تحسينات للشاشات الصغيرة */
+        @media (max-width: 767.98px) {
+            .footer {
+                padding: 2rem 0 1rem;
+            }
+            
+            .btn-whatsapp,
+            .btn-portfolio {
+                width: 100%;
+                max-width: 280px;
+                margin-bottom: 0.8rem;
+            }
+            
+            .whatsapp-buttons .d-flex {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .footer h4 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* تأثيرات إضافية */
+        .footer .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .copyright-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .portfolio-section {
+            margin: 1.5rem 0;
+        }
+
+        /* تأثيرات hover إضافية */
+        .btn-whatsapp:active,
+        .btn-portfolio:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+    </style>
+</footer>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -2243,4 +2487,4 @@
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
-</html>  
+</html> 
